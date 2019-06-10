@@ -16,6 +16,14 @@ PASSWORD=`echo $VCAP_SERVICES | jq -r '.["'$SERVICE'"][0].credentials.password'`
 PORT=`echo $VCAP_SERVICES | jq -r '.["'$SERVICE'"][0].credentials.port'`
 USERNAME=`echo $VCAP_SERVICES | jq -r '.["'$SERVICE'"][0].credentials.username'`
 DATABASE=`echo $VCAP_SERVICES | jq -r '.["'$SERVICE'"][0].credentials.name'`
+#--- ajout crendentials to unseal VAULT ---
+UNSEAL_SERVICE=`echo $VCAP_SERVICES | grep "vault-keys"`
+if [ "$UNSEAL_SERVICE" != "" ];then
+	SERVICE="user-provided"
+	VAULT_UNSEAL_KEY1=`echo $VCAP_SERVICES | jq -r '.["'$SERVICE'"][0].credentials.VAULT_UNSEAL_KEY1'`
+	VAULT_UNSEAL_KEY2=`echo $VCAP_SERVICES | jq -r '.["'$SERVICE'"][0].credentials.VAULT_UNSEAL_KEY2'`
+	VAULT_UNSEAL_KEY3=`echo $VCAP_SERVICES | jq -r '.["'$SERVICE'"][0].credentials.VAULT_UNSEAL_KEY3'`
+fi
 
 cat <<EOF > cf.hcl
 disable_mlock = true
@@ -45,13 +53,13 @@ if [ "$VAULT_UNSEAL_KEY1" != "" ];then
 	sleep 1
 	echo "#### Unsealing..."
 	if [ "$VAULT_UNSEAL_KEY1" != "" ];then
-		./vault unseal $VAULT_UNSEAL_KEY1
+		./vault operator unseal $VAULT_UNSEAL_KEY1
 	fi
 	if [ "$VAULT_UNSEAL_KEY2" != "" ];then
-		./vault unseal $VAULT_UNSEAL_KEY2
+		./vault operator unseal $VAULT_UNSEAL_KEY2
 	fi
 	if [ "$VAULT_UNSEAL_KEY3" != "" ];then
-		./vault unseal $VAULT_UNSEAL_KEY3
+		./vault operator unseal $VAULT_UNSEAL_KEY3
 	fi
 fi
 

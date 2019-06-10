@@ -81,7 +81,7 @@ Now, you can access Vault via like `https://cf-vault.cfapps.io`. Subdomain shoul
 
 ```
 export VAULT_ADDR=https://<your-sub-domain>.cfapps.io
-vault init
+vault operator init
 ```
 
 you'll see five unseal keys and root token
@@ -99,20 +99,23 @@ Initial Root Token: db2c7fae-7162-d09e-7901-66d47360c62f
 Unseal Vault with three of five unseal keys, for example:
 
 ```
-vault unseal w6rUcrlOEd4tI0MNtCYxG2uUoGj8wG9euXm4RiHq7BDh
-vault unseal tkGGsCQJeNyORbz2uRyWjCq03kj/OPtGzmM/Bjv9+RTP
-vault unseal 584Sg15Itt8zJpiJOBh+1IVKp56Hv9FiryiK63dztA7C
+vault operator unseal w6rUcrlOEd4tI0MNtCYxG2uUoGj8wG9euXm4RiHq7BDh
+vault operator unseal tkGGsCQJeNyORbz2uRyWjCq03kj/OPtGzmM/Bjv9+RTP
+vault operator unseal 584Sg15Itt8zJpiJOBh+1IVKp56Hv9FiryiK63dztA7C
 ```
 
 Authenticate with the root token, for example:
 
 ```
-vault auth db2c7fae-7162-d09e-7901-66d47360c62f
+vault login db2c7fae-7162-d09e-7901-66d47360c62f
 ```
 
 Finally, you can read and write Valut :)
 
 ```
+$ vault secrets enable -path=secret kv
+Success! Enabled the kv secrets engine at: secret/
+
 $ vault write secret/hello vaule=world
 Success! Data written to: secret/hello
 
@@ -123,7 +126,7 @@ refresh_interval	768h0m0s
 vaule           	world
 ```
 
-## Unseal when restarting
+## Unseal when restarting via variable env
 
 Because Vault seals when it restarts, you need to unseal automatically in order to keep Vault available in CF environment.
 
@@ -140,7 +143,25 @@ cf set-env cf-vault VAULT_UNSEAL_KEY3 584Sg15Itt8zJpiJOBh+1IVKp56Hv9FiryiK63dztA
 Even if you do `cf restart cf-vault` or `cf restage cf-vaault`, `cf-vault` will be available.
 Of course you can set these variables in your `manifest.yml`.
 
-Note that this way is [not recommended](https://www.vaultproject.io/docs/concepts/seal.html#unsealing) by Hashicorp.
+## Unseal when restarting via credential service. (more secure but not distributed)
+
+```
+# insert the following json with your own keys in a file named vault_keys.json
+{
+  "VAULT_UNSEAL_KEY1": "w6rUcrlOEd4tI0MNtCYxG2uUoGj8wG9euXm4RiHq7BDh",
+  "VAULT_UNSEAL_KEY2": "tkGGsCQJeNyORbz2uRyWjCq03kj/OPtGzmM/Bjv9+RTP",
+  "VAULT_UNSEAL_KEY3": "584Sg15Itt8zJpiJOBh+1IVKp56Hv9FiryiK63dztA7"
+}
+# create the service
+$ cf cups vault-keys -p vault-keys.json
+Création du service fourni par l'utilisateur vault-keys dans l'organisation my-org/l'espace development en tant que myemail@domain.com...
+OK
+$ cf bind-service cf-vault vault-keys
+# restage
+$ cf restage cf-vault
+```
+
+Note that theses way are [not recommended](https://www.vaultproject.io/docs/concepts/seal.html#unsealing) by Hashicorp.
 
 ## Deploy service broker
 
