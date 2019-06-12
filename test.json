@@ -1,0 +1,26 @@
+{
+ "VCAP_SERVICES": {
+  "mysql": [
+   {
+    "credentials": {
+     "hostname": "10.234.250.210",
+     "jdbcUrl": "jdbc:mysql://10.234.250.210:3306/cf_46df6266_6fe7_4e92_8267_11b8b1611e76?user=Nr7mgRXxEwtQJI5z\u0026password=ViAEq2UIKpL3cZIK",
+     "name": "cf_46df6266_6fe7_4e92_8267_11b8b1611e76",
+     "password": "ViAEq2UIKpL3cZIK",
+     "port": 3306,
+     "uri": "mysql://Nr7mgRXxEwtQJI5z:ViAEq2UIKpL3cZIK@10.234.250.210:3306/cf_46df6266_6fe7_4e92_8267_11b8b1611e76?reconnect=true",
+     "username": "Nr7mgRXxEwtQJI5z"
+    },
+    "label": "mysql",
+    "name": "vault-db",
+    "plan": "100mb",
+    "provider": null,
+    "syslog_drain_url": null,
+    "tags": [
+     "mysql"
+    ],
+    "volume_mounts": []
+   }
+  ]
+ }
+}

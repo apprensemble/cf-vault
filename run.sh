@@ -1,12 +1,12 @@
 #!/bin/sh
 
 CLEARDB=`echo $VCAP_SERVICES | grep "cleardb"`
-PMYSQL=`echo $VCAP_SERVICES | grep "p-mysql"`
+PMYSQL=`echo $VCAP_SERVICES | grep "mysql"`
 
 if [ "$CLEARDB" != "" ];then
 	SERVICE="cleardb"
 elif [ "$PMYSQL" != "" ]; then
-	SERVICE="p-mysql"
+	SERVICE="mysql"
 fi
 
 echo "detected $SERVICE"
