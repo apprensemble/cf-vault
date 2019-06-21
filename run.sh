@@ -2,27 +2,44 @@
 
 CLEARDB=`echo $VCAP_SERVICES | grep "cleardb"`
 PMYSQL=`echo $VCAP_SERVICES | grep "mysql"`
+XTRADB=`echo $VCAP_SERVICES | grep "xtradb"`
 
 if [ "$CLEARDB" != "" ];then
 	SERVICE="cleardb"
+elif [ "$XTRADB" != "" ]; then
+	SERVICE="user-provided"
 elif [ "$PMYSQL" != "" ]; then
 	SERVICE="mysql"
 fi
 
 echo "detected $SERVICE"
 
-HOSTNAME=`echo $VCAP_SERVICES | jq -r '.["'$SERVICE'"][0].credentials.hostname'`
-PASSWORD=`echo $VCAP_SERVICES | jq -r '.["'$SERVICE'"][0].credentials.password'`
-PORT=`echo $VCAP_SERVICES | jq -r '.["'$SERVICE'"][0].credentials.port'`
-USERNAME=`echo $VCAP_SERVICES | jq -r '.["'$SERVICE'"][0].credentials.username'`
-DATABASE=`echo $VCAP_SERVICES | jq -r '.["'$SERVICE'"][0].credentials.name'`
+if [ "$XTRADB" != "" ];then
+	HOSTNAME=`echo $VCAP_SERVICES | jq -r '.["'$SERVICE'"][0].credentials._HBX_DB_HOST_WRITE'`
+	PASSWORD=`echo $VCAP_SERVICES | jq -r '.["'$SERVICE'"][0].credentials._HBX_DBA_PWD_WRITE'`
+	PORT=`echo $VCAP_SERVICES | jq -r '.["'$SERVICE'"][0].credentials._HBX_DB_PORT'`
+	USERNAME=`echo $VCAP_SERVICES | jq -r '.["'$SERVICE'"][0].credentials._HBX_DBA_USER_WRITE'`
+	DATABASE=`echo $VCAP_SERVICES | jq -r '.["'$SERVICE'"][0].credentials._HBX_DB_NAME'`
+else
+	HOSTNAME=`echo $VCAP_SERVICES | jq -r '.["'$SERVICE'"][0].credentials.hostname'`
+	PASSWORD=`echo $VCAP_SERVICES | jq -r '.["'$SERVICE'"][0].credentials.password'`
+	PORT=`echo $VCAP_SERVICES | jq -r '.["'$SERVICE'"][0].credentials.port'`
+	USERNAME=`echo $VCAP_SERVICES | jq -r '.["'$SERVICE'"][0].credentials.username'`
+	DATABASE=`echo $VCAP_SERVICES | jq -r '.["'$SERVICE'"][0].credentials.name'`
+fi
 #--- ajout crendentials to unseal VAULT ---
 UNSEAL_SERVICE=`echo $VCAP_SERVICES | grep "vault-keys"`
 if [ "$UNSEAL_SERVICE" != "" ];then
 	SERVICE="user-provided"
-	VAULT_UNSEAL_KEY1=`echo $VCAP_SERVICES | jq -r '.["'$SERVICE'"][0].credentials.VAULT_UNSEAL_KEY1'`
-	VAULT_UNSEAL_KEY2=`echo $VCAP_SERVICES | jq -r '.["'$SERVICE'"][0].credentials.VAULT_UNSEAL_KEY2'`
-	VAULT_UNSEAL_KEY3=`echo $VCAP_SERVICES | jq -r '.["'$SERVICE'"][0].credentials.VAULT_UNSEAL_KEY3'`
+	if [ "$XTRADB" != "" ];then
+		VAULT_UNSEAL_KEY1=`echo $VCAP_SERVICES | jq -r '.["'$SERVICE'"][1].credentials.VAULT_UNSEAL_KEY1'`
+		VAULT_UNSEAL_KEY2=`echo $VCAP_SERVICES | jq -r '.["'$SERVICE'"][1].credentials.VAULT_UNSEAL_KEY2'`
+		VAULT_UNSEAL_KEY3=`echo $VCAP_SERVICES | jq -r '.["'$SERVICE'"][1].credentials.VAULT_UNSEAL_KEY3'`
+	else
+		VAULT_UNSEAL_KEY1=`echo $VCAP_SERVICES | jq -r '.["'$SERVICE'"][0].credentials.VAULT_UNSEAL_KEY1'`
+		VAULT_UNSEAL_KEY2=`echo $VCAP_SERVICES | jq -r '.["'$SERVICE'"][0].credentials.VAULT_UNSEAL_KEY2'`
+		VAULT_UNSEAL_KEY3=`echo $VCAP_SERVICES | jq -r '.["'$SERVICE'"][0].credentials.VAULT_UNSEAL_KEY3'`
+	fi
 fi
 
 cat <<EOF > cf.hcl
